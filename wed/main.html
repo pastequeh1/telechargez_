@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Téléchargements d'applications</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: Palatino Linotype, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #ffffff;
+            margin: 0;
+        }
+        #app-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        form {
+            background: rgba(255, 255, 255, 0.664);
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 5px 10px rgb(0, 0, 0);
+            width: 300px;
+            margin-bottom: 20px;
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            display: block;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: scale(1.05);
+        }
+        #message, #login-message {
+            margin-top: 10px;
+            color: red;
+        }
+        #toggle-login-link {
+            cursor: pointer;
+            color: blue;
+            margin-top: 10px;
+            display: block;
+            text-decoration: underline;
+        }
+        #download-section {
+            display: none;
+            text-align: center;
+        }
+        .download-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+        .download-item {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .download-text {
+            margin-right: 10px;
+        }
+        #user-info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px;
+            border-radius: 2px;
+            background-color: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <form id="signup-form">
+            <h1>Créer un compte</h1>
+            <input type="text" id="username" placeholder="Nom d'utilisateur" required>
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="password" id="password" placeholder="Mot de passe" required>
+            <button type="submit">S'inscrire</button>
+            <p id="message"></p>
+        </form>
+
+        <form id="login-form" style="display: none;">
+            <h1>Se connecter</h1>
+            <input type="email" id="login-email" placeholder="Email" required>
+            <input type="password" id="login-password" placeholder="Mot de passe" required>
+            <button type="submit">Se connecter</button>
+            <p id="login-message"></p>
+        </form>
+        
+        <p id="toggle-login-link">Déjà inscrit ? Connectez-vous ici</p>
+
+        <div id="download-section">
+            <h2>Téléchargez vos fichiers</h2>
+            <div class="download-container">
+                <div class="download-item">
+                    <span class="download-text">Fichier 1 :</span>
+                    <button onclick="downloadFile('fichiers/example1.zip')">Télécharger</button>
+                </div>
+                <div class="download-item">
+                    <span class="download-text">Fichier 2 :</span>
+                    <button onclick="downloadFile('fichiers/example2.zip')">Télécharger</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="user-info" style="display: none;">
+        <p id="user-name"></p>
+        <p id="download-count">Total des téléchargements : <span id="count">0</span></p>
+    </div>
+
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+      import { getAuth, createUserWithEmailAndPassword, sendEmailVerification, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+      const firebaseConfig = {
+          apiKey: "AIzaSyBY6M-SDD-cNh6BN1S7fVAi-ctoszBWwiU",
+          authDomain: "wede-91738.firebaseapp.com",
+          projectId: "wede-91738",
+          storageBucket: "wede-91738.appspot.com",
+          messagingSenderId: "746796209859",
+          appId: "1:746796209859:web:98c2192744094d996e3476",
+          measurementId: "G-XXB8E6QJHJ"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth();
+
+      let isLoggedIn = false; // Variable pour suivre l'état de connexion
+
+      document.getElementById('signup-form').addEventListener('submit', function(e) {
+          e.preventDefault();
+          const email = document.getElementById('email').value;
+          const password = document.getElementById('password').value;
+          
+          createUserWithEmailAndPassword(auth, email, password)
+              .then((userCredential) => {
+                  sendEmailVerification(userCredential.user)
+                      .then(() => {
+                          document.getElementById('message').innerText = "Un email de vérification a été envoyé.";
+                          document.getElementById('signup-form').reset();
+                      });
+              })
+              .catch((error) => {
+                  document.getElementById('message').innerText = error.message;
+              });
+      });
+
+      document.getElementById('login-form').addEventListener('submit', function(e) {
+          e.preventDefault();
+          const loginEmail = document.getElementById('login-email').value;
+          const loginPassword = document.getElementById('login-password').value;
+
+          signInWithEmailAndPassword(auth, loginEmail, loginPassword)
+              .then(() => {
+                  const username = document.getElementById('username').value; // Récupérer le nom d'utilisateur
+                  document.getElementById('user-name').innerText = `Bienvenue, ${username}!`;
+                  document.getElementById('user-info').style.display = 'block';
+                  document.getElementById('login-message').innerText = "";
+                  document.getElementById('download-section').style.display = 'block';
+                  isLoggedIn = true; // Définir l'état de connexion sur vrai
+                  document.getElementById('toggle-login-link').style.display = 'none'; // Cacher le lien de connexion
+                  document.getElementById('signup-form').style.display = 'none'; // Cacher le formulaire d'inscription
+                  document.getElementById('login-form').style.display = 'none'; // Cacher le formulaire de connexion
+              })
+              .catch((error) => {
+                  document.getElementById('login-message').innerText = error.message;
+              });
+      });
+
+      document.getElementById('toggle-login-link').addEventListener('click', function() {
+          const signupForm = document.getElementById('signup-form');
+          const loginForm = document.getElementById('login-form');
+          if (signupForm.style.display === 'none') {
+              signupForm.style.display = 'block';
+              loginForm.style.display = 'none';
+              this.innerText = "Déjà inscrit ? Connectez-vous ici";
+          } else {
+              signupForm.style.display = 'none';
+              loginForm.style.display = 'block';
+              this.innerText = "Pas encore inscrit ? Inscrivez-vous ici";
+          }
+      });
+
+      window.downloadFile = function(fileName) {
+          const link = document.createElement('a');
+          link.href = fileName; // Utilise le chemin local vers le fichier
+          link.download = fileName.split('/').pop(); // Télécharge le fichier avec son nom d'origine
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+
+          // Incrémenter le compteur de téléchargements
+          const countElement = document.getElementById('count');
+          countElement.innerText = parseInt(countElement.innerText) + 1;
+      }
+    </script>
+</body>
+</html>
